@@ -381,20 +381,24 @@ async function fetchKanjiDetailsFromHtml(kanjiChar) {
       meanings = meaningsMatch[1].replace(/<[^>]+>/g, '').trim().split(',').map(s => s.trim()).filter(Boolean);
     }
 
-    const onyomi = [];
-    const onyomiRegex = /class="onyomi"[^>]*>[\s\S]*?<a[^>]*>([\s\S]*?)<\/a>/gi;
-    let m;
-    while ((m = onyomiRegex.exec(html)) !== null) {
-      const clean = m[1].replace(/<[^>]+>/g, '').trim();
-      if (clean && !onyomi.includes(clean)) onyomi.push(clean);
-    }
+    // Extract On, Kun, Nanori readings by dt section
+    const extractReadingsByTag = (tagName) => {
+      const re = new RegExp(`<dt>\\s*${tagName}:?\\s*<\\/dt>[\\s\\S]*?<dd[^>]*>([\\s\\S]*?)<\\/dd>`, 'i');
+      const match = html.match(re);
+      if (!match) return [];
+      const links = [];
+      const linkRe = /<a[^>]*>([\\s\\S]*?)<\/a>/gi;
+      let m;
+      while ((m = linkRe.exec(match[1])) !== null) {
+        const clean = m[1].replace(/<[^>]+>/g, '').trim();
+        if (clean && !links.includes(clean)) links.push(clean);
+      }
+      return links;
+    };
 
-    const kunyomi = [];
-    const kunyomiRegex = /class="kunyomi"[^>]*>[\s\S]*?<a[^>]*>([\s\S]*?)<\/a>/gi;
-    while ((m = kunyomiRegex.exec(html)) !== null) {
-      const clean = m[1].replace(/<[^>]+>/g, '').trim();
-      if (clean && !kunyomi.includes(clean)) kunyomi.push(clean);
-    }
+    const onyomi = extractReadingsByTag('On');
+    const kunyomi = extractReadingsByTag('Kun');
+    const nanori = extractReadingsByTag('Nanori');
 
     const strokeMatch = html.match(/class="kanji-details__stroke_count"[^>]*>[\s\S]*?<strong>(\d+)<\/strong>/i);
     const strokeCount = strokeMatch ? parseInt(strokeMatch[1], 10) : null;
@@ -413,7 +417,7 @@ async function fetchKanjiDetailsFromHtml(kanjiChar) {
       meanings,
       onyomi,
       kunyomi,
-      nanori: [],
+      nanori,
       strokeCount,
       jlpt,
       grade,

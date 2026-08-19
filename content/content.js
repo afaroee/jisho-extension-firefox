@@ -195,8 +195,14 @@
     const topWord = data.words && data.words.length > 0 ? data.words[0] : null;
     const topKanji = data.kanjiList && data.kanjiList.length > 0 ? data.kanjiList[0] : null;
 
+    // Build compound furigana if word reading is missing
+    const compoundFurigana = data.kanjiList
+      .map(k => (k.onyomi[0] ? katakanaToHiragana(k.onyomi[0]) : (k.kunyomi[0] ? k.kunyomi[0].replace(/\..*/, '') : '')))
+      .filter(Boolean)
+      .join('・');
+
     const displayWord = topWord ? topWord.displayWord : (topKanji ? topKanji.kanji : data.query);
-    const displayReading = topWord ? topWord.displayReading : (topKanji ? (topKanji.onyomi.concat(topKanji.kunyomi).join('、 ')) : '');
+    const displayReading = (topWord && topWord.displayReading) ? topWord.displayReading : (compoundFurigana || (topKanji ? (topKanji.onyomi.concat(topKanji.kunyomi).join('、 ')) : ''));
     const audioTargetText = displayWord || displayReading || data.query;
     const directAudioUrl = topWord?.audioUrl || null;
 
@@ -415,13 +421,37 @@
         const card = document.createElement('div');
         card.className = 'jkl-kanji-card';
 
-        const onyomiStr = k.onyomi && k.onyomi.length > 0 ? k.onyomi.join('、 ') : '—';
-        const kunyomiStr = k.kunyomi && k.kunyomi.length > 0 ? k.kunyomi.join('、 ') : '—';
+        const primaryOn = k.onyomi && k.onyomi[0] ? k.onyomi[0] : '';
+        const primaryKun = k.kunyomi && k.kunyomi[0] ? k.kunyomi[0].replace(/\..*/, '') : '';
+        const rubyFurigana = primaryOn
+          ? `${primaryOn} (${katakanaToHiragana(primaryOn)})`
+          : (primaryKun || '');
+
+        const onyomiBadges = (k.onyomi && k.onyomi.length > 0)
+          ? k.onyomi.map(on => `<span class="jkl-reading-pill on-pill">${on} <span class="jkl-pill-sub">(${katakanaToHiragana(on)})</span></span>`).join(' ')
+          : '<span style="color:var(--jkl-text-muted);">—</span>';
+
+        const kunyomiBadges = (k.kunyomi && k.kunyomi.length > 0)
+          ? k.kunyomi.map(kun => `<span class="jkl-reading-pill kun-pill">${kun}</span>`).join(' ')
+          : '<span style="color:var(--jkl-text-muted);">—</span>';
+
+        const nanoriBadges = (k.nanori && k.nanori.length > 0)
+          ? k.nanori.map(n => `<span class="jkl-reading-pill nanori-pill">${n}</span>`).join(' ')
+          : '';
+
         const meaningsStr = k.meanings && k.meanings.length > 0 ? k.meanings.join(', ') : '—';
 
         card.innerHTML = `
           <div class="jkl-kanji-top">
-            <div class="jkl-kanji-glyph">${k.kanji}</div>
+            <div class="jkl-kanji-glyph-wrapper">
+              <ruby class="jkl-glyph-ruby">
+                <span class="jkl-kanji-glyph">${k.kanji}</span>
+                <rt class="jkl-glyph-rt">${rubyFurigana}</rt>
+              </ruby>
+              <button class="jkl-kanji-speak-btn" title="Pronounce ${k.kanji}">
+                <svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+              </button>
+            </div>
             <div class="jkl-kanji-meta-grid">
               <div class="jkl-meta-box">
                 <div class="jkl-meta-label">Strokes</div>
@@ -443,13 +473,19 @@
               <span class="jkl-reading-vals" style="font-weight:600;">${meaningsStr}</span>
             </div>
             <div class="jkl-reading-row">
-              <span class="jkl-reading-type">On'yomi:</span>
-              <span class="jkl-reading-vals" style="color:var(--jkl-primary);font-weight:600;">${onyomiStr}</span>
+              <span class="jkl-reading-type">On'yomi (音):</span>
+              <div class="jkl-reading-vals">${onyomiBadges}</div>
             </div>
             <div class="jkl-reading-row">
-              <span class="jkl-reading-type">Kun'yomi:</span>
-              <span class="jkl-reading-vals">${kunyomiStr}</span>
+              <span class="jkl-reading-type">Kun'yomi (訓):</span>
+              <div class="jkl-reading-vals">${kunyomiBadges}</div>
             </div>
+            ${nanoriBadges ? `
+              <div class="jkl-reading-row">
+                <span class="jkl-reading-type">Nanori (名):</span>
+                <div class="jkl-reading-vals">${nanoriBadges}</div>
+              </div>
+            ` : ''}
             ${k.radical ? `
               <div class="jkl-reading-row">
                 <span class="jkl-reading-type">Radical:</span>
@@ -458,6 +494,16 @@
             ` : ''}
           </div>
         `;
+
+        // Attach audio to kanji speak button
+        const speakBtn = card.querySelector('.jkl-kanji-speak-btn');
+        speakBtn.addEventListener('click', () => {
+          const speakTarget = primaryOn ? katakanaToHiragana(primaryOn) : (primaryKun || k.kanji);
+          if (typeof jpAudio !== 'undefined') {
+            jpAudio.play(speakTarget);
+          }
+        });
+
         container.appendChild(card);
       });
     }

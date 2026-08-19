@@ -92,4 +92,13 @@ assert(ankiTsv.includes('日本語\tにほんご\tJapanese (language)\tJLPT N5\t
 assert(ankiTsv.includes('漢\tカン\tChina; Sino-\tJLPT N3\tKanji JishoLens'), 'Kanji row should be formatted correctly');
 console.log('  ✅ Anki TSV export format verified.');
 
+// 5. Test Katakana to Hiragana Furigana Conversion
+console.log('\nTest 5: Validating Katakana to Hiragana Conversion...');
+const { katakanaToHiragana } = require('../utils/jisho_api');
+assert.strictEqual(katakanaToHiragana('ソウ'), 'そう', "Should convert 'ソウ' to 'そう'");
+assert.strictEqual(katakanaToHiragana('ショウ'), 'しょう', "Should convert 'ショウ' to 'しょう'");
+assert.strictEqual(katakanaToHiragana('ビ'), 'び', "Should convert 'ビ' to 'び'");
+assert.strictEqual(katakanaToHiragana('ソ'), 'そ', "Should convert 'ソ' to 'そ'");
+console.log('  ✅ Katakana to Hiragana conversion verified.');
+
 console.log('\n🎉 All tests passed successfully!\n');

@@ -425,27 +425,69 @@
   margin-bottom: 6px;
 }
 
-/* Kanji Detail Cards */
+/* Kanji Detail Cards & Furigana */
 .jkl-kanji-card {
   background: var(--jkl-bg-secondary);
   border: 1px solid var(--jkl-border);
   border-radius: var(--jkl-radius-md);
   padding: 14px;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .jkl-kanji-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
+}
+
+.jkl-kanji-glyph-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.jkl-glyph-ruby {
+  display: inline-flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  ruby-position: over;
+}
+
+.jkl-glyph-rt {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--jkl-primary);
+  line-height: 1;
+  margin-bottom: 3px;
+  letter-spacing: 0.5px;
 }
 
 .jkl-kanji-glyph {
-  font-size: 44px;
+  font-size: 42px;
   font-weight: 900;
-  color: var(--jkl-primary);
+  color: var(--jkl-text-main);
   line-height: 1;
+}
+
+.jkl-kanji-speak-btn {
+  background: var(--jkl-primary-light);
+  color: var(--jkl-primary);
+  border: 1px solid rgba(232, 59, 59, 0.2);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s, background 0.15s;
+}
+
+.jkl-kanji-speak-btn:hover {
+  transform: scale(1.1);
+  background: var(--jkl-primary);
+  color: #fff;
 }
 
 .jkl-kanji-meta-grid {
@@ -483,19 +525,61 @@
 
 .jkl-reading-row {
   display: flex;
-  margin-bottom: 5px;
+  align-items: baseline;
+  margin-bottom: 6px;
 }
 
 .jkl-reading-type {
   font-weight: 700;
-  width: 75px;
+  width: 80px;
   color: var(--jkl-text-muted);
   flex-shrink: 0;
+  font-size: 12px;
 }
 
 .jkl-reading-vals {
   flex: 1;
   color: var(--jkl-text-main);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+
+/* Reading Pills with Furigana Breakdown */
+.jkl-reading-pill {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 5px;
+  border: 1px solid var(--jkl-border);
+}
+
+.jkl-reading-pill.on-pill {
+  background: rgba(232, 59, 59, 0.08);
+  border-color: rgba(232, 59, 59, 0.25);
+  color: var(--jkl-primary);
+}
+
+.jkl-reading-pill.kun-pill {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.25);
+  color: #2563EB;
+}
+
+.jkl-reading-pill.nanori-pill {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.25);
+  color: #059669;
+}
+
+.jkl-pill-sub {
+  font-size: 10px;
+  font-weight: normal;
+  opacity: 0.85;
 }
 
 /* KanjiVG Stroke Animator Styles */

@@ -139,17 +139,23 @@ class JishoAPI {
         meanings = meaningNodes[0].textContent.trim().split(',').map(s => s.trim()).filter(Boolean);
       }
 
-      // On-yomi (Katakana readings)
-      const onyomiNodes = doc.querySelectorAll('.dictionary_codes .onyomi a, .kanji-details__main-readings .onyomi a');
-      const onyomi = Array.from(onyomiNodes).map(n => n.textContent.trim()).filter(Boolean);
+      // Robust reading extractor across DOM structures
+      const getReadings = (type) => {
+        const dls = Array.from(doc.querySelectorAll('dl.dictionary_entry, .dictionary_codes dl, .kanji-details__main-readings dl'));
+        for (const dl of dls) {
+          const dt = dl.querySelector('dt');
+          if (dt && dt.textContent.toLowerCase().includes(type.toLowerCase())) {
+            return Array.from(dl.querySelectorAll('dd a')).map(a => a.textContent.trim()).filter(Boolean);
+          }
+        }
+        // Fallback selectors
+        const sel = doc.querySelectorAll(`.${type}_yomi a, .${type} a, .${type.toLowerCase()} a`);
+        return Array.from(sel).map(n => n.textContent.trim()).filter(Boolean);
+      };
 
-      // Kun-yomi (Hiragana readings)
-      const kunyomiNodes = doc.querySelectorAll('.dictionary_codes .kunyomi a, .kanji-details__main-readings .kunyomi a');
-      const kunyomi = Array.from(kunyomiNodes).map(n => n.textContent.trim()).filter(Boolean);
-
-      // Nanori readings (Name readings)
-      const nanoriNodes = doc.querySelectorAll('.dictionary_codes .nanori a, .kanji-details__main-readings .nanori a');
-      const nanori = Array.from(nanoriNodes).map(n => n.textContent.trim()).filter(Boolean);
+      const onyomi = getReadings('on');
+      const kunyomi = getReadings('kun');
+      const nanori = getReadings('nanori');
 
       // Stroke Count
       let strokeCount = null;
@@ -301,9 +307,21 @@ class JishoAPI {
   }
 }
 
+/**
+ * Convert Katakana text to Hiragana (Furigana study helper)
+ * e.g. 'ソウ' -> 'そう', 'ビ' -> 'び'
+ */
+function katakanaToHiragana(str) {
+  if (!str) return '';
+  return str.replace(/[\u30a1-\u30f6]/g, match => {
+    const chr = match.charCodeAt(0) - 0x60;
+    return String.fromCharCode(chr);
+  });
+}
+
 // Export singleton instance
 const jishoAPI = new JishoAPI();
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { JishoAPI, jishoAPI };
+  module.exports = { JishoAPI, jishoAPI, katakanaToHiragana };
 }

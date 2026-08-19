@@ -117,8 +117,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const topWord = data.words && data.words.length > 0 ? data.words[0] : null;
     const topKanji = data.kanjiList && data.kanjiList.length > 0 ? data.kanjiList[0] : null;
 
+    // Build compound furigana if word reading is missing
+    const compoundFurigana = data.kanjiList
+      .map(k => (k.onyomi[0] ? katakanaToHiragana(k.onyomi[0]) : (k.kunyomi[0] ? k.kunyomi[0].replace(/\..*/, '') : '')))
+      .filter(Boolean)
+      .join('・');
+
     const displayWord = topWord ? topWord.displayWord : (topKanji ? topKanji.kanji : data.query);
-    const displayReading = topWord ? topWord.displayReading : (topKanji ? (topKanji.onyomi.concat(topKanji.kunyomi).join('、 ')) : '');
+    const displayReading = (topWord && topWord.displayReading) ? topWord.displayReading : (compoundFurigana || (topKanji ? (topKanji.onyomi.concat(topKanji.kunyomi).join('、 ')) : ''));
     const jlptBadge = topWord?.jlpt || topKanji?.jlpt || null;
     const isCommon = topWord?.isCommon || false;
     const targetText = displayWord || displayReading || data.query;
@@ -167,16 +173,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (data.hasKanji && data.kanjiList.length > 0) {
       html += `<div style="font-size:12px;font-weight:700;color:var(--text-muted);margin:14px 0 8px;">Kanji Characters in Selection:</div>`;
       data.kanjiList.forEach(k => {
-        const on = k.onyomi.join('、 ') || '—';
-        const kun = k.kunyomi.join('、 ') || '—';
+        const primaryOn = k.onyomi && k.onyomi[0] ? k.onyomi[0] : '';
+        const primaryKun = k.kunyomi && k.kunyomi[0] ? k.kunyomi[0].replace(/\..*/, '') : '';
+        const rubyFurigana = primaryOn
+          ? `${primaryOn} (${katakanaToHiragana(primaryOn)})`
+          : (primaryKun || '');
+
+        const onStr = k.onyomi && k.onyomi.length > 0
+          ? k.onyomi.map(on => `${on} (${katakanaToHiragana(on)})`).join(', ')
+          : '—';
+        const kunStr = k.kunyomi && k.kunyomi.length > 0 ? k.kunyomi.join(', ') : '—';
         const mean = k.meanings.join(', ') || '—';
+
         html += `
           <div class="word-sense-card" style="display:flex;gap:12px;align-items:center;">
-            <div style="font-size:32px;font-weight:900;color:var(--primary);">${k.kanji}</div>
+            <div style="text-align:center;">
+              <ruby style="ruby-position:over;">
+                <span style="font-size:32px;font-weight:900;color:var(--primary);line-height:1;">${k.kanji}</span>
+                <rt style="font-size:10px;font-weight:bold;color:var(--primary);">${rubyFurigana}</rt>
+              </ruby>
+            </div>
             <div style="font-size:12px;flex:1;">
               <div><strong>Meaning:</strong> ${mean}</div>
-              <div><strong style="color:var(--text-muted);">On:</strong> ${on}</div>
-              <div><strong style="color:var(--text-muted);">Kun:</strong> ${kun}</div>
+              <div><strong style="color:var(--text-muted);">On (音):</strong> <span style="color:var(--primary);">${onStr}</span></div>
+              <div><strong style="color:var(--text-muted);">Kun (訓):</strong> ${kunStr}</div>
               <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">Strokes: ${k.strokeCount || '—'} | JLPT: ${k.jlpt || '—'}</div>
             </div>
           </div>
