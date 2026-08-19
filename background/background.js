@@ -1,6 +1,6 @@
 /**
  * Jisho Kanji Lens - Background Service
- * Manages Context Menus, Keyboard Commands, and API Request Proxying
+ * Manages Context Menus, Keyboard Commands, API Requests, and Audio Playback (bypassing CSP)
  */
 
 // Import scripts in MV3 background context if using importScripts
@@ -12,6 +12,9 @@ try {
 
 // Browser API compatibility wrapper
 const extBrowser = typeof browser !== 'undefined' ? browser : chrome;
+
+// Background Audio Manager
+let bgAudio = null;
 
 // 1. Setup Context Menus
 function setupContextMenus() {
@@ -68,7 +71,7 @@ extBrowser.contextMenus.onClicked.addListener(async (info, tab) => {
         });
         await extBrowser.scripting.executeScript({
           target: { tabId: tab.id },
-          files: ['utils/storage.js', 'utils/kanjivg.js', 'utils/jisho_api.js', 'content/content.js']
+          files: ['utils/storage.js', 'utils/kanjivg.js', 'utils/jisho_api.js', 'utils/audio.js', 'content/content.js']
         });
 
         // Retry sending message
@@ -122,6 +125,34 @@ extBrowser.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
   }
 
+  // Handle Audio Playback Request (bypassing CSP)
+  if (request.type === 'PLAY_AUDIO') {
+    handlePlayAudio(request.text, request.speed || 1.0, request.audioUrl)
+      .then(res => sendResponse(res))
+      .catch(err => sendResponse({ success: false, error: err.message }));
+    return true;
+  }
+
+  // Handle Audio Speed Change
+  if (request.type === 'SET_AUDIO_SPEED') {
+    if (bgAudio && !bgAudio.paused) {
+      bgAudio.playbackRate = parseFloat(request.speed) || 1.0;
+    }
+    sendResponse({ success: true });
+    return false;
+  }
+
+  // Handle Stop Audio
+  if (request.type === 'STOP_AUDIO') {
+    if (bgAudio) {
+      bgAudio.pause();
+      bgAudio.currentTime = 0;
+      bgAudio = null;
+    }
+    sendResponse({ success: true });
+    return false;
+  }
+
   // Open Jisho web page in a new tab
   if (request.type === 'OPEN_JISHO_TAB') {
     const url = request.url || `https://jisho.org/search/${encodeURIComponent(request.query || '')}`;
@@ -132,6 +163,60 @@ extBrowser.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
   return false;
 });
+
+/**
+ * Fetch and play Japanese audio in background context
+ */
+async function handlePlayAudio(text, speed = 1.0, customAudioUrl = null) {
+  if (!text || !text.trim()) {
+    throw new Error('Empty text');
+  }
+
+  const cleanText = text.trim();
+  const audioUrl = customAudioUrl || `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=ja&q=${encodeURIComponent(cleanText)}`;
+
+  try {
+    // Fetch audio stream with background host_permissions
+    const response = await fetch(audioUrl);
+    if (!response.ok) {
+      throw new Error(`Audio fetch HTTP error: ${response.status}`);
+    }
+
+    const buffer = await response.arrayBuffer();
+    const base64 = arrayBufferToBase64(buffer);
+    const dataUrl = `data:audio/mp3;base64,${base64}`;
+
+    // Play in background context directly
+    if (typeof Audio !== 'undefined') {
+      if (bgAudio) {
+        bgAudio.pause();
+        bgAudio.currentTime = 0;
+      }
+      bgAudio = new Audio(dataUrl);
+      bgAudio.playbackRate = parseFloat(speed) || 1.0;
+      bgAudio.play().catch(e => console.warn('Background audio.play error:', e));
+    }
+
+    return {
+      success: true,
+      audioDataUrl: dataUrl,
+      playedInBackground: true
+    };
+  } catch (err) {
+    console.warn('handlePlayAudio error:', err);
+    throw err;
+  }
+}
+
+function arrayBufferToBase64(buffer) {
+  let binary = '';
+  const bytes = new Uint8Array(buffer);
+  const len = bytes.byteLength;
+  for (let i = 0; i < len; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+}
 
 /**
  * Perform full lookup via background fetch (No CORS issues)
