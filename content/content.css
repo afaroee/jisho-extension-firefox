@@ -7,12 +7,12 @@
   --jkl-primary-hover: #D02B2B;
   --jkl-primary-light: rgba(232, 59, 59, 0.12);
   --jkl-accent: #3B82F6;
-  --jkl-bg-card: rgba(255, 255, 255, 0.96);
+  --jkl-bg-card: rgba(255, 255, 255, 0.98);
   --jkl-bg-secondary: #F8FAFC;
   --jkl-text-main: #0F172A;
   --jkl-text-muted: #64748B;
   --jkl-border: #E2E8F0;
-  --jkl-shadow: 0 20px 35px -8px rgba(0, 0, 0, 0.22), 0 0 1px 1px rgba(0, 0, 0, 0.08);
+  --jkl-shadow: 0 20px 35px -8px rgba(0, 0, 0, 0.25), 0 0 1px 1px rgba(0, 0, 0, 0.1);
   --jkl-radius-lg: 16px;
   --jkl-radius-md: 10px;
   --jkl-radius-sm: 6px;
@@ -22,39 +22,40 @@
 
 @media (prefers-color-scheme: dark) {
   :host {
-    --jkl-bg-card: rgba(24, 26, 32, 0.96);
+    --jkl-bg-card: rgba(24, 26, 32, 0.98);
     --jkl-bg-secondary: #1E222B;
     --jkl-text-main: #F1F5F9;
     --jkl-text-muted: #94A3B8;
     --jkl-border: #334155;
-    --jkl-shadow: 0 20px 40px -8px rgba(0, 0, 0, 0.6), 0 0 1px 1px rgba(255, 255, 255, 0.1);
+    --jkl-shadow: 0 20px 40px -8px rgba(0, 0, 0, 0.65), 0 0 1px 1px rgba(255, 255, 255, 0.1);
   }
 }
 
 :host(.jkl-theme-dark) {
-  --jkl-bg-card: rgba(24, 26, 32, 0.96);
+  --jkl-bg-card: rgba(24, 26, 32, 0.98);
   --jkl-bg-secondary: #1E222B;
   --jkl-text-main: #F1F5F9;
   --jkl-text-muted: #94A3B8;
   --jkl-border: #334155;
-  --jkl-shadow: 0 20px 40px -8px rgba(0, 0, 0, 0.6), 0 0 1px 1px rgba(255, 255, 255, 0.1);
+  --jkl-shadow: 0 20px 40px -8px rgba(0, 0, 0, 0.65), 0 0 1px 1px rgba(255, 255, 255, 0.1);
 }
 
 :host(.jkl-theme-light) {
-  --jkl-bg-card: rgba(255, 255, 255, 0.96);
+  --jkl-bg-card: rgba(255, 255, 255, 0.98);
   --jkl-bg-secondary: #F8FAFC;
   --jkl-text-main: #0F172A;
   --jkl-text-muted: #64748B;
   --jkl-border: #E2E8F0;
-  --jkl-shadow: 0 20px 35px -8px rgba(0, 0, 0, 0.22), 0 0 1px 1px rgba(0, 0, 0, 0.08);
+  --jkl-shadow: 0 20px 35px -8px rgba(0, 0, 0, 0.25), 0 0 1px 1px rgba(0, 0, 0, 0.1);
 }
 
 /* Base Modal Container */
 .jkl-modal-container {
   position: fixed;
   z-index: 2147483647;
-  width: 440px;
+  width: 450px;
   max-width: 95vw;
+  height: 560px;
   max-height: 85vh;
   background: var(--jkl-bg-card);
   backdrop-filter: blur(16px);
@@ -68,6 +69,9 @@
   flex-direction: column;
   overflow: hidden;
   box-sizing: border-box;
+  pointer-events: auto !important;
+  user-select: text;
+  overscroll-behavior: contain;
   animation: jkl-fade-slide 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
@@ -92,6 +96,7 @@
   border-bottom: 1px solid var(--jkl-border);
   cursor: grab;
   user-select: none;
+  flex-shrink: 0;
 }
 
 .jkl-header:active {
@@ -163,6 +168,7 @@
   background: var(--jkl-bg-card);
   border-bottom: 1px solid var(--jkl-border);
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .jkl-search-input {
@@ -170,7 +176,7 @@
   background: var(--jkl-bg-secondary);
   border: 1px solid var(--jkl-border);
   border-radius: var(--jkl-radius-sm);
-  padding: 6px 10px;
+  padding: 7px 12px;
   font-size: 13px;
   color: var(--jkl-text-main);
   outline: none;
@@ -186,26 +192,35 @@
   color: white;
   border: none;
   border-radius: var(--jkl-radius-sm);
-  padding: 6px 12px;
+  padding: 7px 14px;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
+  transition: background 0.15s;
+}
+
+.jkl-search-submit:hover {
+  background: var(--jkl-primary-hover);
 }
 
 /* Main Display Banner */
 .jkl-banner {
-  padding: 16px;
+  padding: 14px 16px;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid var(--jkl-border);
   background: linear-gradient(180deg, var(--jkl-bg-secondary) 0%, transparent 100%);
+  flex-shrink: 0;
+  gap: 12px;
 }
 
 .jkl-banner-main {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  flex: 1;
+  min-width: 0;
 }
 
 .jkl-furigana {
@@ -213,6 +228,9 @@
   color: var(--jkl-primary);
   font-weight: 600;
   min-height: 18px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .jkl-word-title {
@@ -221,6 +239,7 @@
   line-height: 1.1;
   color: var(--jkl-text-main);
   letter-spacing: -0.5px;
+  word-break: break-all;
 }
 
 .jkl-badges {
@@ -254,28 +273,68 @@
   color: var(--jkl-primary);
 }
 
+/* Enhanced Audio Controls Widget */
+.jkl-audio-widget {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--jkl-bg-secondary);
+  border: 1px solid var(--jkl-border);
+  padding: 4px 6px;
+  border-radius: 24px;
+  flex-shrink: 0;
+}
+
 .jkl-audio-trigger {
-  background: var(--jkl-primary-light);
-  color: var(--jkl-primary);
-  border: 1px solid rgba(232, 59, 59, 0.25);
-  width: 38px;
-  height: 38px;
+  background: var(--jkl-primary);
+  color: #fff;
+  border: none;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 2px 6px rgba(232, 59, 59, 0.3);
 }
 
 .jkl-audio-trigger:hover {
   transform: scale(1.08);
-  background: var(--jkl-primary);
-  color: #fff;
+  background: var(--jkl-primary-hover);
 }
 
 .jkl-audio-trigger:active {
   transform: scale(0.95);
+}
+
+.jkl-audio-trigger.jkl-playing {
+  animation: jkl-pulse 1s infinite alternate;
+  background: #10B981;
+}
+
+@keyframes jkl-pulse {
+  from { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); }
+  to { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+}
+
+.jkl-audio-speed-btn {
+  background: transparent;
+  border: 1px solid var(--jkl-border);
+  color: var(--jkl-text-main);
+  border-radius: 12px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.jkl-audio-speed-btn:hover {
+  border-color: var(--jkl-primary);
+  color: var(--jkl-primary);
+  background: var(--jkl-primary-light);
 }
 
 /* Tabs Navigation */
@@ -285,6 +344,7 @@
   border-bottom: 1px solid var(--jkl-border);
   padding: 0 12px;
   gap: 4px;
+  flex-shrink: 0;
 }
 
 .jkl-tab-btn {
@@ -297,6 +357,7 @@
   color: var(--jkl-text-muted);
   cursor: pointer;
   transition: all 0.15s ease;
+  user-select: none;
 }
 
 .jkl-tab-btn:hover {
@@ -308,29 +369,40 @@
   border-bottom-color: var(--jkl-primary);
 }
 
-/* Scrollable Content Body */
+/* Scrollable Content Body - CRITICAL FLEX & SCROLL FIX */
 .jkl-content-body {
   padding: 16px;
-  overflow-y: auto;
-  flex: 1;
-  max-height: 420px;
+  overflow-y: auto !important;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  flex: 1 1 auto;
+  min-height: 0 !important;
+  box-sizing: border-box;
 }
 
 /* Custom Scrollbar */
 .jkl-content-body::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
 .jkl-content-body::-webkit-scrollbar-track {
   background: transparent;
 }
 .jkl-content-body::-webkit-scrollbar-thumb {
   background: var(--jkl-border);
-  border-radius: 3px;
+  border-radius: 4px;
+}
+.jkl-content-body::-webkit-scrollbar-thumb:hover {
+  background: var(--jkl-text-muted);
 }
 
 /* Definition Senses */
 .jkl-sense-item {
-  margin-bottom: 14px;
+  margin-bottom: 16px;
+  background: var(--jkl-bg-secondary);
+  border: 1px solid var(--jkl-border);
+  border-radius: var(--jkl-radius-md);
+  padding: 12px 14px;
 }
 
 .jkl-pos-tag {
@@ -338,19 +410,19 @@
   font-weight: 600;
   color: var(--jkl-text-muted);
   font-style: italic;
-  margin-bottom: 3px;
+  margin-bottom: 6px;
 }
 
 .jkl-def-list {
   margin: 0;
   padding-left: 20px;
   font-size: 13.5px;
-  line-height: 1.45;
+  line-height: 1.5;
   color: var(--jkl-text-main);
 }
 
 .jkl-def-list li {
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
 /* Kanji Detail Cards */
@@ -370,7 +442,7 @@
 }
 
 .jkl-kanji-glyph {
-  font-size: 40px;
+  font-size: 44px;
   font-weight: 900;
   color: var(--jkl-primary);
   line-height: 1;
@@ -385,7 +457,7 @@
 
 .jkl-meta-box {
   background: var(--jkl-bg-card);
-  padding: 6px 4px;
+  padding: 6px 6px;
   border-radius: 6px;
   border: 1px solid var(--jkl-border);
 }
@@ -411,13 +483,14 @@
 
 .jkl-reading-row {
   display: flex;
-  margin-bottom: 4px;
+  margin-bottom: 5px;
 }
 
 .jkl-reading-type {
   font-weight: 700;
   width: 75px;
   color: var(--jkl-text-muted);
+  flex-shrink: 0;
 }
 
 .jkl-reading-vals {
@@ -650,6 +723,7 @@
   background: var(--jkl-bg-secondary);
   border-top: 1px solid var(--jkl-border);
   font-size: 11px;
+  flex-shrink: 0;
 }
 
 .jkl-footer-link {

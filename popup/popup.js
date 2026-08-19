@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const btnClearHistory = document.getElementById('btn-clear-history');
 
   let currentData = null;
+  let popupAudioSpeed = 1.0;
 
   // 1. Initialize favorites count & recent history
   updateFavoritesCount();
@@ -120,6 +121,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const displayReading = topWord ? topWord.displayReading : (topKanji ? (topKanji.onyomi.concat(topKanji.kunyomi).join('、 ')) : '');
     const jlptBadge = topWord?.jlpt || topKanji?.jlpt || null;
     const isCommon = topWord?.isCommon || false;
+    const targetText = displayWord || displayReading || data.query;
+    const directAudio = topWord?.audioUrl || null;
 
     let html = `
       <div class="result-banner">
@@ -132,9 +135,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             ${data.hasKanji ? `<span class="badge" style="background:var(--primary-light);color:var(--primary);">${data.kanjiList.length} Kanji</span>` : ''}
           </div>
         </div>
-        <button id="popup-audio-btn" class="audio-btn" title="Listen pronunciation">
-          <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
-        </button>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <button id="popup-audio-btn" class="audio-btn" title="Listen Japanese pronunciation">
+            <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+          </button>
+          <button id="popup-speed-btn" class="btn-secondary" style="font-weight:bold;padding:4px 8px;" title="Adjust audio speed">${popupAudioSpeed}x</button>
+        </div>
       </div>
     `;
 
@@ -180,12 +186,26 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     resultsContainer.innerHTML = html;
 
-    // Attach Audio
+    // Attach Audio Controls
     const audioBtn = document.getElementById('popup-audio-btn');
-    if (audioBtn) {
+    const speedBtn = document.getElementById('popup-speed-btn');
+
+    if (audioBtn && typeof jpAudio !== 'undefined') {
       audioBtn.addEventListener('click', () => {
-        speakJapanese(displayWord || displayReading || data.query);
+        jpAudio.setSpeed(popupAudioSpeed);
+        jpAudio.onStateChange = (isPlaying, speed) => {
+          audioBtn.classList.toggle('playing', isPlaying);
+          if (speedBtn) speedBtn.textContent = `${speed}x`;
+        };
+        jpAudio.play(targetText, directAudio);
       });
+
+      if (speedBtn) {
+        speedBtn.addEventListener('click', () => {
+          popupAudioSpeed = jpAudio.cycleSpeed();
+          speedBtn.textContent = `${popupAudioSpeed}x`;
+        });
+      }
     }
   }
 
@@ -205,7 +225,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (data.kanjiList.length > 1) {
       const picker = document.createElement('div');
-      picker.style.cssText = 'display:flex;gap:6px;margin-bottom:10px;align-items:center;';
+      picker.style.cssText = 'display:flex;gap:6px;margin-bottom:10px;align-items:center;flex-wrap:wrap;';
       picker.innerHTML = `<span style="font-size:11px;font-weight:600;color:var(--text-muted);">Select:</span>`;
       
       data.kanjiList.forEach((k, idx) => {
@@ -351,17 +371,5 @@ document.addEventListener('DOMContentLoaded', async () => {
   function switchTab(tabName) {
     navTabs.forEach(t => t.classList.toggle('active', t.dataset.tab === tabName));
     tabPanes.forEach(p => p.classList.toggle('active', p.id === `pane-${tabName}`));
-  }
-
-  function speakJapanese(text) {
-    if (!text || !('speechSynthesis' in window)) return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'ja-JP';
-    utterance.rate = 0.9;
-    const voices = window.speechSynthesis.getVoices();
-    const jaVoice = voices.find(v => v.lang.startsWith('ja') || v.name.includes('Japanese'));
-    if (jaVoice) utterance.voice = jaVoice;
-    window.speechSynthesis.speak(utterance);
   }
 });

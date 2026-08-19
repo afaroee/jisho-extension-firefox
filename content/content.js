@@ -16,6 +16,7 @@
   let currentActiveTab = 'vocab';
   let isDragging = false;
   let dragOffset = { x: 0, y: 0 };
+  let currentAudioSpeed = 1.0;
 
   /**
    * Initialize or get the Shadow DOM Host
@@ -54,8 +55,8 @@
    * Calculate smart position near selection or cursor
    */
   function getModalPosition(targetX, targetY) {
-    const modalWidth = 440;
-    const modalHeight = 480;
+    const modalWidth = 450;
+    const modalHeight = 560;
     const padding = 16;
 
     let x = (targetX !== undefined ? targetX : window.innerWidth / 2 - modalWidth / 2);
@@ -77,24 +78,20 @@
   }
 
   /**
-   * Pronounce Japanese text using Speech Synthesis
+   * Pronounce Japanese text using high-fidelity native audio engine
    */
-  function speakJapanese(text) {
-    if (!text || !('speechSynthesis' in window)) return;
-    try {
-      window.speechSynthesis.cancel(); // Stop prior speech
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'ja-JP';
-      utterance.rate = 0.9; // Natural pace
-      
-      // Select Japanese voice if available
-      const voices = window.speechSynthesis.getVoices();
-      const jaVoice = voices.find(v => v.lang.startsWith('ja') || v.name.includes('Japanese'));
-      if (jaVoice) utterance.voice = jaVoice;
-
-      window.speechSynthesis.speak(utterance);
-    } catch (e) {
-      console.warn('TTS playback error:', e);
+  function playJapanesePronunciation(text, audioBtn, speedBtn, customAudioUrl) {
+    if (typeof jpAudio !== 'undefined') {
+      jpAudio.setSpeed(currentAudioSpeed);
+      jpAudio.onStateChange = (isPlaying, speed) => {
+        if (audioBtn) {
+          audioBtn.classList.toggle('jkl-playing', isPlaying);
+        }
+        if (speedBtn) {
+          speedBtn.textContent = `${speed}x`;
+        }
+      };
+      jpAudio.play(text, customAudioUrl);
     }
   }
 
@@ -142,8 +139,9 @@
 
     root.appendChild(modal);
 
-    // Setup Header Dragging
+    // Setup Header Dragging & Wheel Scrolling Protection
     setupDrag(modal);
+    setupScrollHandling(modal);
 
     // Setup Search bar inside modal
     const searchInput = modal.querySelector('.jkl-search-input');
@@ -159,7 +157,10 @@
 
     // Setup Close Button
     const closeBtn = modal.querySelector('.jkl-close-btn');
-    closeBtn.addEventListener('click', () => modal.remove());
+    closeBtn.addEventListener('click', () => {
+      if (typeof jpAudio !== 'undefined') jpAudio.stop();
+      modal.remove();
+    });
 
     // Fetch data from background service worker
     try {
@@ -196,9 +197,9 @@
 
     const displayWord = topWord ? topWord.displayWord : (topKanji ? topKanji.kanji : data.query);
     const displayReading = topWord ? topWord.displayReading : (topKanji ? (topKanji.onyomi.concat(topKanji.kunyomi).join('、 ')) : '');
-    const isKanjiOnly = data.hasKanji && (!topWord || data.query.length === 1);
+    const audioTargetText = displayWord || displayReading || data.query;
+    const directAudioUrl = topWord?.audioUrl || null;
 
-    // Determine banner info
     const jlptBadge = topWord?.jlpt || topKanji?.jlpt || null;
     const isCommon = topWord?.isCommon || false;
 
@@ -234,7 +235,7 @@
         <button class="jkl-search-submit">Search</button>
       </div>
 
-      <!-- Main Banner -->
+      <!-- Main Banner with Audio & Real-time Speed Control -->
       <div class="jkl-banner">
         <div class="jkl-banner-main">
           <div class="jkl-furigana">${displayReading}</div>
@@ -245,9 +246,14 @@
             ${data.hasKanji ? `<span class="jkl-badge jkl-badge-kanji">${data.kanjiList.length} Kanji</span>` : ''}
           </div>
         </div>
-        <button class="jkl-audio-trigger" title="Listen to pronunciation">
-          <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
-        </button>
+
+        <!-- Audio Player & Live Speed Control -->
+        <div class="jkl-audio-widget">
+          <button class="jkl-audio-trigger" title="Listen to Japanese pronunciation">
+            <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+          </button>
+          <button class="jkl-audio-speed-btn" title="Click to adjust audio speed">${currentAudioSpeed}x</button>
+        </div>
       </div>
 
       <!-- Tabs Navigation -->
@@ -297,10 +303,19 @@
       });
     });
 
-    // Setup Audio Button
+    // Setup Audio Button & Live Speed Adjustment
     const audioBtn = modal.querySelector('.jkl-audio-trigger');
+    const speedBtn = modal.querySelector('.jkl-audio-speed-btn');
+
     audioBtn.addEventListener('click', () => {
-      speakJapanese(displayWord || displayReading || data.query);
+      playJapanesePronunciation(audioTargetText, audioBtn, speedBtn, directAudioUrl);
+    });
+
+    speedBtn.addEventListener('click', () => {
+      if (typeof jpAudio !== 'undefined') {
+        currentAudioSpeed = jpAudio.cycleSpeed();
+        speedBtn.textContent = `${currentAudioSpeed}x`;
+      }
     });
 
     // Setup Star / Favorite
@@ -319,8 +334,9 @@
       }
     });
 
-    // Setup Header Dragging
+    // Setup Header Dragging & Wheel Scrolling Protection
     setupDrag(modal);
+    setupScrollHandling(modal);
 
     // Search bar re-binding
     const searchInput = modal.querySelector('.jkl-search-input');
@@ -339,7 +355,10 @@
 
     // Close button
     const closeBtn = modal.querySelector('.jkl-close-btn');
-    closeBtn.addEventListener('click', () => modal.remove());
+    closeBtn.addEventListener('click', () => {
+      if (typeof jpAudio !== 'undefined') jpAudio.stop();
+      modal.remove();
+    });
   }
 
   /**
@@ -349,6 +368,7 @@
     const container = modal.querySelector('.jkl-content-body');
     if (!container) return;
     container.innerHTML = '';
+    container.scrollTop = 0; // Reset scroll position on tab switch
 
     if (tabName === 'vocab') {
       if (!data.words || data.words.length === 0) {
@@ -356,7 +376,7 @@
         return;
       }
 
-      data.words.slice(0, 5).forEach((word, idx) => {
+      data.words.slice(0, 6).forEach((word, idx) => {
         const itemEl = document.createElement('div');
         itemEl.className = 'jkl-sense-item';
 
@@ -370,7 +390,7 @@
         });
 
         itemEl.innerHTML = `
-          <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px;">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px;">
             <div style="font-size:15px;font-weight:700;color:var(--jkl-text-main);">
               ${idx + 1}. ${word.displayWord} <span style="font-size:13px;font-weight:normal;color:var(--jkl-primary);">【${word.displayReading}】</span>
             </div>
@@ -424,7 +444,7 @@
             </div>
             <div class="jkl-reading-row">
               <span class="jkl-reading-type">On'yomi:</span>
-              <span class="jkl-reading-vals" style="color:var(--jkl-primary);">${onyomiStr}</span>
+              <span class="jkl-reading-vals" style="color:var(--jkl-primary);font-weight:600;">${onyomiStr}</span>
             </div>
             <div class="jkl-reading-row">
               <span class="jkl-reading-type">Kun'yomi:</span>
@@ -451,7 +471,7 @@
       // If multiple kanji, allow selecting which kanji to animate
       if (data.kanjiList.length > 1) {
         const selectorBar = document.createElement('div');
-        selectorBar.style.cssText = 'display:flex;gap:6px;margin-bottom:12px;align-items:center;';
+        selectorBar.style.cssText = 'display:flex;gap:6px;margin-bottom:12px;align-items:center;flex-wrap:wrap;';
         selectorBar.innerHTML = `<span style="font-size:12px;color:var(--jkl-text-muted);font-weight:600;">Select Kanji:</span>`;
 
         data.kanjiList.forEach((k, idx) => {
@@ -511,9 +531,23 @@
       const animator = kanjivg.createStrokeAnimator(parsed);
       wrapper.appendChild(animator);
     } else {
-      // Fallback SVG display
       wrapper.innerHTML = `<div style="display:flex;justify-content:center;padding:12px;">${kanjiObj.svg}</div>`;
     }
+  }
+
+  /**
+   * Scroll event handler to prevent host page scroll hijacking (e.g. on Twitter/X)
+   */
+  function setupScrollHandling(modal) {
+    modal.addEventListener('wheel', (e) => {
+      const contentBody = modal.querySelector('.jkl-content-body');
+      if (contentBody && contentBody.contains(e.target)) {
+        // Prevent event from bubbling up to host page (like Twitter feed scroller)
+        e.stopPropagation();
+        contentBody.scrollTop += e.deltaY;
+        e.preventDefault();
+      }
+    }, { passive: false });
   }
 
   /**
@@ -578,7 +612,10 @@
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && shadowRoot) {
       const modal = shadowRoot.querySelector('.jkl-modal-container');
-      if (modal) modal.remove();
+      if (modal) {
+        if (typeof jpAudio !== 'undefined') jpAudio.stop();
+        modal.remove();
+      }
     }
   });
 

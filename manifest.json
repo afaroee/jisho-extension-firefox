@@ -26,13 +26,15 @@
     "https://jisho.org/*",
     "https://*.jisho.org/*",
     "https://raw.githubusercontent.com/*",
-    "https://kanjivg.tagaini.net/*"
+    "https://kanjivg.tagaini.net/*",
+    "https://translate.google.com/*"
   ],
   "background": {
     "scripts": [
       "utils/storage.js",
       "utils/kanjivg.js",
       "utils/jisho_api.js",
+      "utils/audio.js",
       "background/background.js"
     ]
   },
@@ -45,6 +47,7 @@
         "utils/storage.js",
         "utils/kanjivg.js",
         "utils/jisho_api.js",
+        "utils/audio.js",
         "content/content.js"
       ],
       "css": [
