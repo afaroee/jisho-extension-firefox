@@ -381,15 +381,25 @@ async function fetchKanjiDetailsFromHtml(kanjiChar) {
       meanings = meaningsMatch[1].replace(/<[^>]+>/g, '').trim().split(',').map(s => s.trim()).filter(Boolean);
     }
 
-    // Extract On, Kun, Nanori readings by dt section
+    // Extract On, Kun, Nanori readings by dt section or class name
     const extractReadingsByTag = (tagName) => {
+      let ddContent = '';
       const re = new RegExp(`<dt>\\s*${tagName}:?\\s*<\\/dt>[\\s\\S]*?<dd[^>]*>([\\s\\S]*?)<\\/dd>`, 'i');
       const match = html.match(re);
-      if (!match) return [];
+      if (match) {
+        ddContent = match[1];
+      } else {
+        const tagClass = tagName.toLowerCase() + '_yomi';
+        const classRe = new RegExp(`class="[^"]*${tagClass}[^"]*"[\\s\\S]*?<dd[^>]*>([\\s\\S]*?)<\\/dd>`, 'i');
+        const classMatch = html.match(classRe);
+        if (classMatch) ddContent = classMatch[1];
+      }
+
+      if (!ddContent) return [];
       const links = [];
-      const linkRe = /<a[^>]*>([\\s\\S]*?)<\/a>/gi;
+      const linkRe = /<a[^>]*>([\s\S]*?)<\/a>/gi;
       let m;
-      while ((m = linkRe.exec(match[1])) !== null) {
+      while ((m = linkRe.exec(ddContent)) !== null) {
         const clean = m[1].replace(/<[^>]+>/g, '').trim();
         if (clean && !links.includes(clean)) links.push(clean);
       }
