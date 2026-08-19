@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings - Jisho Kanji Lens</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <div class="settings-wrapper">
+    <!-- Header -->
+    <header class="settings-header">
+      <div class="header-main">
+        <div class="logo-box">辞</div>
+        <div>
+          <h1>Jisho Kanji Lens Settings</h1>
+          <p class="subtitle">Customize dictionary lookup, stroke order visualizer, audio, and Anki export.</p>
+        </div>
+      </div>
+      <div id="save-indicator" class="save-indicator">Saved automatically</div>
+    </header>
+
+    <!-- Main Form -->
+    <main class="settings-body">
+      <!-- 1. Appearance Section -->
+      <section class="settings-card">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L4.35 19.4c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.9-1.9C9.17 19.58 10.53 20 12 20c4.97 0 9-4.03 9-9s-4.03-9-9-9zm0 15c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z"/></svg>
+          Appearance & Theme
+        </div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <label for="setting-theme">Color Theme</label>
+            <span class="setting-desc">Choose between dark, light, or automatically match your browser system theme.</span>
+          </div>
+          <select id="setting-theme" class="select-input">
+            <option value="auto">Auto (System Default)</option>
+            <option value="dark">Dark Theme</option>
+            <option value="light">Light Theme</option>
+          </select>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <label for="setting-popup-pos">Floating Popup Position</label>
+            <span class="setting-desc">Where the lookup card appears when triggered on a web page.</span>
+          </div>
+          <select id="setting-popup-pos" class="select-input">
+            <option value="cursor">Near Cursor / Selection</option>
+            <option value="center">Center of Screen</option>
+            <option value="top-right">Top Right Corner</option>
+          </select>
+        </div>
+      </section>
+
+      <!-- 2. Kanji Stroke Order Section -->
+      <section class="settings-card">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+          Kanji Stroke Visualizer
+        </div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <label for="setting-stroke-speed">Default Animation Speed</label>
+            <span class="setting-desc">Playback speed for animated Kanji stroke order diagrams.</span>
+          </div>
+          <select id="setting-stroke-speed" class="select-input">
+            <option value="0.5">0.5x (Slow - Study strokes)</option>
+            <option value="1.0">1.0x (Normal)</option>
+            <option value="1.5">1.5x (Fast)</option>
+            <option value="2.0">2.0x (Very Fast)</option>
+          </select>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <label for="setting-stroke-numbers">Show Stroke Numbers by Default</label>
+            <span class="setting-desc">Display numbered order indicators next to each stroke path.</span>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="setting-stroke-numbers">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </section>
+
+      <!-- 3. Audio & Pronunciation -->
+      <section class="settings-card">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+          Audio & Speech Synthesis
+        </div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <label for="setting-auto-audio">Auto-Pronounce on Lookup</label>
+            <span class="setting-desc">Automatically play the native Japanese speech synthesis pronunciation when opening a word or kanji.</span>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="setting-auto-audio">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </section>
+
+      <!-- 4. Shortcuts & Triggers -->
+      <section class="settings-card">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M20 5H4c-1.1 0-1.99.9-1.99 2L2 17c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-9 3h2v2h-2V8zm0 3h2v2h-2v-2zM8 8h2v2H8V8zm0 3h2v2H8v-2zm-1 2H5v-2h2v2zm0-3H5V8h2v2zm9 7H8v-2h8v2zm0-4h-2v-2h2v2zm0-3h-2V8h2v2zm3 3h-2v-2h2v2zm0-3h-2V8h2v2z"/></svg>
+          Keyboard Shortcuts & Triggers
+        </div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <label>Lookup Selected Text</label>
+            <span class="setting-desc">Press on any web page with text selected.</span>
+          </div>
+          <div class="shortcut-badge"><kbd>Alt</kbd> + <kbd>J</kbd></div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <label>Open Extension Toolbar Popup</label>
+            <span class="setting-desc">Global shortcut to open search dictionary popup.</span>
+          </div>
+          <div class="shortcut-badge"><kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>J</kbd></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="settings-footer">
+      <span>Jisho Kanji Lens v1.0.0 • Developed for Firefox</span>
+      <a href="https://github.com/afaroee/jisho-extension-firefox" target="_blank" rel="noopener" class="repo-link">
+        GitHub Repository ↗
+      </a>
+    </footer>
+  </div>
+
+  <script src="../utils/storage.js"></script>
+  <script src="options.js"></script>
+</body>
+</html>

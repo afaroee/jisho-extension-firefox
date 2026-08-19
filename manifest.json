@@ -1,0 +1,95 @@
+{
+  "manifest_version": 3,
+  "name": "Jisho Kanji Lens - Japanese Dictionary & Stroke Order",
+  "version": "1.0.0",
+  "description": "Instant Kanji & Japanese vocabulary lookups with animated stroke order, audio pronunciation, sentence examples, and Anki export powered by Jisho.org.",
+  "author": "afaroee",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "jisho-kanji-lens@afaroee.addon",
+      "strict_min_version": "109.0"
+    }
+  },
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "permissions": [
+    "contextMenus",
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://jisho.org/*",
+    "https://*.jisho.org/*",
+    "https://raw.githubusercontent.com/*",
+    "https://kanjivg.tagaini.net/*"
+  ],
+  "background": {
+    "scripts": [
+      "utils/storage.js",
+      "utils/kanjivg.js",
+      "utils/jisho_api.js",
+      "background/background.js"
+    ]
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "utils/storage.js",
+        "utils/kanjivg.js",
+        "utils/jisho_api.js",
+        "content/content.js"
+      ],
+      "css": [
+        "content/content.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "content/content.css",
+        "icons/*"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    },
+    "default_title": "Jisho Kanji Lens"
+  },
+  "options_ui": {
+    "page": "options/options.html",
+    "open_in_tab": true
+  },
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Alt+Shift+J"
+      },
+      "description": "Open Jisho Kanji Lens Popup"
+    },
+    "search-selection": {
+      "suggested_key": {
+        "default": "Alt+J"
+      },
+      "description": "Look up selected Japanese text / Kanji"
+    }
+  }
+}

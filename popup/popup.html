@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jisho Kanji Lens</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <!-- Header -->
+    <header class="popup-header">
+      <div class="header-brand">
+        <div class="brand-badge">辞</div>
+        <div class="brand-text">
+          <span class="brand-title">Jisho Kanji Lens</span>
+          <span class="brand-sub">Japanese Dictionary</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="btn-open-options" class="btn-icon" title="Open Settings">
+          <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54A.484.484 0 0 0 14 2h-4c-.25 0-.46.18-.49.42l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.63 8.47c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.08.63-.08.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Search Input Bar -->
+    <div class="search-section">
+      <div class="search-input-wrapper">
+        <svg class="search-icon" viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        <input type="text" id="popup-search-input" placeholder="Type Kanji, Romaji, English..." autofocus />
+        <button id="btn-clear-search" class="btn-clear hidden" title="Clear">✕</button>
+      </div>
+      <button id="btn-popup-search" class="btn-primary">Search</button>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <nav class="popup-nav">
+      <button class="nav-tab active" data-tab="results">Results</button>
+      <button class="nav-tab" data-tab="strokes">Strokes</button>
+      <button class="nav-tab" data-tab="favorites">Wordbook (<span id="fav-count">0</span>)</button>
+      <button class="nav-tab" data-tab="history">History</button>
+    </nav>
+
+    <!-- Main Viewport -->
+    <main class="popup-content">
+      <!-- 1. Search Results Pane -->
+      <section id="pane-results" class="tab-pane active">
+        <div id="results-container">
+          <div class="empty-state">
+            <div class="empty-icon">🔍</div>
+            <p>Enter a word, kanji, or phrase above, or right-click any selected text while browsing.</p>
+            <div class="shortcut-tip">Shortcut: <kbd>Alt</kbd> + <kbd>J</kbd> on selected text</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. Stroke Order Animator Pane -->
+      <section id="pane-strokes" class="tab-pane">
+        <div id="strokes-container">
+          <div class="empty-state">
+            <div class="empty-icon">✍️</div>
+            <p>Search a Kanji character above to see its animated stroke order.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. Favorites / Wordbook Pane -->
+      <section id="pane-favorites" class="tab-pane">
+        <div class="pane-header">
+          <span>Saved Words & Kanji</span>
+          <div class="header-actions">
+            <button id="btn-export-anki" class="btn-secondary" title="Export to Anki TSV">
+              <svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+              Export Anki
+            </button>
+            <button id="btn-clear-favorites" class="btn-secondary danger">Clear</button>
+          </div>
+        </div>
+        <div id="favorites-list" class="items-list">
+          <!-- Dynamically populated -->
+        </div>
+      </section>
+
+      <!-- 4. History Pane -->
+      <section id="pane-history" class="tab-pane">
+        <div class="pane-header">
+          <span>Recent Lookups</span>
+          <button id="btn-clear-history" class="btn-secondary danger">Clear History</button>
+        </div>
+        <div id="history-list" class="items-list">
+          <!-- Dynamically populated -->
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="popup-footer">
+      <span class="footer-tip">Tip: Right-click Kanji on any web page to search</span>
+      <a href="https://jisho.org" target="_blank" rel="noopener" class="footer-link">jisho.org ↗</a>
+    </footer>
+  </div>
+
+  <script src="../utils/storage.js"></script>
+  <script src="../utils/kanjivg.js"></script>
+  <script src="../utils/jisho_api.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
