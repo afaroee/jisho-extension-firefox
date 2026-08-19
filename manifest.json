@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Jisho Kanji Lens - Japanese Dictionary & Stroke Order",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Instant Kanji & Japanese vocabulary lookups with animated stroke order, audio pronunciation, sentence examples, and Anki export powered by Jisho.org.",
   "author": "afaroee",
   "browser_specific_settings": {

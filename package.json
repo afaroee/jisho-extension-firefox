@@ -1,6 +1,6 @@
 {
   "name": "jisho-kanji-lens-firefox",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Firefox extension for instant Kanji & Japanese word lookups with animated stroke order, audio pronunciation, sentence examples, and Anki export powered by Jisho.org",
   "main": "background/background.js",
   "scripts": {
