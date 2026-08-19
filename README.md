@@ -4,6 +4,12 @@ Jisho Kanji Lens is a Mozilla Firefox extension that enables instant lookups of 
 
 ---
 
+## Disclaimer
+
+This extension is an independent open-source project and is not affiliated, associated, authorized, endorsed by, or in any way officially connected with [Jisho.org](https://jisho.org) or any of its subsidiaries or affiliates. All dictionary and linguistic data referenced by this tool are the property of their respective owners and projects (including EDICT/JMdict, KANJIDIC, and KanjiVG).
+
+---
+
 ## Key Features
 
 - **Contextual In-Page Lookup**: Highlight any Japanese word or Kanji, right-click, and select **"Search Jisho"** to view definitions in a floating window.
