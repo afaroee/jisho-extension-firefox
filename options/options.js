@@ -8,6 +8,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const strokeSpeedSelect = document.getElementById('setting-stroke-speed');
   const strokeNumbersToggle = document.getElementById('setting-stroke-numbers');
   const autoAudioToggle = document.getElementById('setting-auto-audio');
+  const rememberSizeSelect = document.getElementById('setting-remember-size');
+  const resetDimensionsBtn = document.getElementById('btn-reset-dimensions');
   const saveIndicator = document.getElementById('save-indicator');
 
   let currentSettings = {};
@@ -21,6 +23,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     strokeSpeedSelect.value = String(currentSettings.strokeAnimationSpeed || '1.0');
     strokeNumbersToggle.checked = currentSettings.showStrokeNumbers !== false;
     autoAudioToggle.checked = Boolean(currentSettings.autoPlayAudio);
+    if (rememberSizeSelect) {
+      rememberSizeSelect.value = String(currentSettings.rememberModalSize !== false);
+    }
   }
 
   function showSaveFeedback() {
@@ -57,4 +62,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   autoAudioToggle.addEventListener('change', (e) => {
     updateSetting('autoPlayAudio', e.target.checked);
   });
+
+  if (rememberSizeSelect) {
+    rememberSizeSelect.addEventListener('change', (e) => {
+      updateSetting('rememberModalSize', e.target.value === 'true');
+    });
+  }
+
+  if (resetDimensionsBtn) {
+    resetDimensionsBtn.addEventListener('click', async () => {
+      if (typeof resetModalDimensions === 'function') {
+        await resetModalDimensions();
+        showSaveFeedback();
+      }
+    });
+  }
 });

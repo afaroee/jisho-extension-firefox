@@ -45,18 +45,42 @@
     const style = document.createElement('style');
     style.textContent = `
       :host { all: initial; }
+      .jkl-modal-container { position: fixed !important; box-sizing: border-box; }
+      .jkl-resize-edge { position: absolute; z-index: 100; touch-action: none; }
+      .jkl-resize-r { top: 48px; right: 0; width: 8px; height: calc(100% - 48px); cursor: ew-resize; }
+      .jkl-resize-l { top: 48px; left: 0; width: 8px; height: calc(100% - 48px); cursor: ew-resize; }
+      .jkl-resize-b { bottom: 0; left: 18px; right: 18px; height: 8px; cursor: ns-resize; }
+      .jkl-resize-t { top: 0; left: 18px; right: 18px; height: 6px; cursor: ns-resize; }
+      .jkl-resize-corner { position: absolute; width: 18px; height: 18px; z-index: 101; touch-action: none; display: flex; align-items: center; justify-content: center; }
+      .jkl-resize-br { bottom: 0; right: 0; cursor: nwse-resize; color: #94A3B8; }
+      .jkl-resize-bl { bottom: 0; left: 0; cursor: nesw-resize; }
+      .jkl-resize-tl { top: 0; left: 0; cursor: nwse-resize; }
+      .jkl-resize-tr { top: 0; right: 0; cursor: nesw-resize; }
     `;
     shadowRoot.appendChild(style);
 
     return shadowRoot;
   }
 
+  const RESIZE_HANDLES_HTML = `
+    <div class="jkl-resize-edge jkl-resize-t" data-edge="t" title="Drag to resize height"></div>
+    <div class="jkl-resize-edge jkl-resize-r" data-edge="r" title="Drag to resize width"></div>
+    <div class="jkl-resize-edge jkl-resize-l" data-edge="l" title="Drag to resize width"></div>
+    <div class="jkl-resize-edge jkl-resize-b" data-edge="b" title="Drag to resize height"></div>
+    <div class="jkl-resize-corner jkl-resize-tl" data-edge="tl" title="Drag to resize"></div>
+    <div class="jkl-resize-corner jkl-resize-tr" data-edge="tr" title="Drag to resize"></div>
+    <div class="jkl-resize-corner jkl-resize-bl" data-edge="bl" title="Drag to resize (Double-click to reset size)"></div>
+    <div class="jkl-resize-corner jkl-resize-br" data-edge="br" title="Drag to resize (Double-click to reset size)">
+      <svg viewBox="0 0 16 16" width="12" height="12"><path fill="currentColor" d="M14 14H12V12H14V14ZM14 10H12V8H14V10ZM10 14H8V12H10V14ZM14 6H12V4H14V6ZM10 10H8V8H10V10ZM6 14H4V12H6V14Z"/></svg>
+    </div>
+  `;
+
   /**
    * Calculate smart position near selection or cursor
    */
-  function getModalPosition(targetX, targetY) {
-    const modalWidth = 450;
-    const modalHeight = 560;
+  function getModalPosition(targetX, targetY, customWidth = 450, customHeight = 560) {
+    const modalWidth = customWidth;
+    const modalHeight = customHeight;
     const padding = 16;
 
     let x = (targetX !== undefined ? targetX : window.innerWidth / 2 - modalWidth / 2);
@@ -105,10 +129,32 @@
     const existingModal = root.querySelector('.jkl-modal-container');
     if (existingModal) existingModal.remove();
 
-    const { x, y } = getModalPosition(posX, posY);
+    // Determine dimensions from settings or default
+    let modalWidth = 450;
+    let modalHeight = 560;
+
+    if (typeof getSettings === 'function') {
+      try {
+        const settings = await getSettings();
+        if (settings && settings.rememberModalSize !== false && settings.modalDimensions) {
+          if (settings.modalDimensions.inPageWidth) {
+            modalWidth = Math.max(360, Math.min(settings.modalDimensions.inPageWidth, window.innerWidth - 40));
+          }
+          if (settings.modalDimensions.inPageHeight) {
+            modalHeight = Math.max(420, Math.min(settings.modalDimensions.inPageHeight, window.innerHeight - 40));
+          }
+        }
+      } catch (err) {
+        // Fallback to default dimensions
+      }
+    }
+
+    const { x, y } = getModalPosition(posX, posY, modalWidth, modalHeight);
 
     const modal = document.createElement('div');
     modal.className = 'jkl-modal-container';
+    modal.style.width = `${modalWidth}px`;
+    modal.style.height = `${modalHeight}px`;
     modal.style.left = `${x}px`;
     modal.style.top = `${y}px`;
 
@@ -135,13 +181,16 @@
         <div class="jkl-spinner"></div>
         <span>Searching Jisho for "<strong>${query}</strong>"...</span>
       </div>
+
+      ${RESIZE_HANDLES_HTML}
     `;
 
     root.appendChild(modal);
 
-    // Setup Header Dragging & Wheel Scrolling Protection
+    // Setup Dragging, Scrolling Protection & Corner Resizing
     setupDrag(modal);
     setupScrollHandling(modal);
+    setupResize(modal);
 
     // Setup Search bar inside modal
     const searchInput = modal.querySelector('.jkl-search-input');
@@ -190,7 +239,9 @@
    * Render complete content tabs once data is received
    */
   function renderModalContent(modal, data, activeTab) {
-    currentActiveTab = activeTab;
+    // Fall back to the first tab if the requested one is unknown or unavailable
+    const validTabs = data.hasKanji ? ['vocab', 'kanji', 'strokes', 'sentences'] : ['vocab', 'sentences'];
+    currentActiveTab = validTabs.includes(activeTab) ? activeTab : 'vocab';
 
     const topWord = data.words && data.words.length > 0 ? data.words[0] : null;
     const topKanji = data.kanjiList && data.kanjiList.length > 0 ? data.kanjiList[0] : null;
@@ -292,6 +343,8 @@
           Open on Jisho.org ↗
         </a>
       </div>
+
+      ${RESIZE_HANDLES_HTML}
     `;
 
     // Render active tab content
@@ -340,9 +393,10 @@
       }
     });
 
-    // Setup Header Dragging & Wheel Scrolling Protection
+    // Setup Header Dragging & Edge/Corner Resizing
+    // (the wheel handler from showModal() is already attached to the modal element)
     setupDrag(modal);
-    setupScrollHandling(modal);
+    setupResize(modal);
 
     // Search bar re-binding
     const searchInput = modal.querySelector('.jkl-search-input');
@@ -387,7 +441,7 @@
         itemEl.className = 'jkl-sense-item';
 
         const posText = word.senses.map(s => s.partsOfSpeech.join(', ')).filter(Boolean).join('; ');
-        
+
         let sensesHtml = '';
         word.senses.forEach((s, sIdx) => {
           const defs = s.definitions.join(', ');
@@ -628,6 +682,87 @@
 
       document.addEventListener('mousemove', onMouseMove);
       document.addEventListener('mouseup', onMouseUp);
+    });
+  }
+
+  /**
+   * Free resize: drag any edge or corner (t, b, l, r, tl, tr, bl, br)
+   */
+  function setupResize(modal) {
+    const DEFAULT_W = 450;
+    const DEFAULT_H = 560;
+    const MIN_W = 360;
+    const MIN_H = 420;
+
+    modal.querySelectorAll('[data-edge]').forEach((handle) => {
+      const edge = handle.dataset.edge;
+
+      handle.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        handle.setPointerCapture(e.pointerId);
+        handle.classList.add('active');
+
+        const start = modal.getBoundingClientRect();
+        const startX = e.clientX;
+        const startY = e.clientY;
+        const maxW = Math.min(window.innerWidth * 0.95, 1100);
+        const maxH = Math.min(window.innerHeight * 0.9, 950);
+        document.body.style.userSelect = 'none';
+
+        const onMove = (ev) => {
+          const dx = ev.clientX - startX;
+          const dy = ev.clientY - startY;
+          let width = start.width;
+          let height = start.height;
+
+          if (edge.includes('r')) width = Math.min(start.width + dx, window.innerWidth - start.left);
+          if (edge.includes('l')) width = Math.min(start.width - dx, start.right);
+          if (edge.includes('b')) height = Math.min(start.height + dy, window.innerHeight - start.top);
+          if (edge.includes('t')) height = Math.min(start.height - dy, start.bottom);
+
+          width = Math.max(MIN_W, Math.min(width, maxW));
+          height = Math.max(MIN_H, Math.min(height, maxH));
+
+          modal.style.width = `${width}px`;
+          modal.style.height = `${height}px`;
+
+          // Left/top edges: keep the opposite edge fixed
+          if (edge.includes('l')) modal.style.left = `${start.right - modal.offsetWidth}px`;
+          if (edge.includes('t')) modal.style.top = `${start.bottom - modal.offsetHeight}px`;
+        };
+
+        const onUp = async () => {
+          handle.classList.remove('active');
+          handle.removeEventListener('pointermove', onMove);
+          handle.removeEventListener('pointerup', onUp);
+          handle.removeEventListener('pointercancel', onUp);
+          document.body.style.userSelect = '';
+          if (typeof updateModalDimensions === 'function') {
+            await updateModalDimensions({
+              inPageWidth: modal.offsetWidth,
+              inPageHeight: modal.offsetHeight
+            });
+          }
+        };
+
+        handle.addEventListener('pointermove', onMove);
+        handle.addEventListener('pointerup', onUp);
+        handle.addEventListener('pointercancel', onUp);
+      });
+
+      // Double-click a corner to reset the size
+      if (edge.length === 2) {
+        handle.addEventListener('dblclick', async (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          modal.style.width = `${DEFAULT_W}px`;
+          modal.style.height = `${DEFAULT_H}px`;
+          if (typeof updateModalDimensions === 'function') {
+            await updateModalDimensions({ inPageWidth: DEFAULT_W, inPageHeight: DEFAULT_H });
+          }
+        });
+      }
     });
   }
 

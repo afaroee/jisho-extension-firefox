@@ -17,7 +17,14 @@ const DEFAULT_SETTINGS = {
   showStrokeNumbers: true,
   triggerMode: 'contextMenu', // 'contextMenu' | 'doubleClick' | 'hotkey'
   fontSize: 'medium', // 'small' | 'medium' | 'large'
-  maxHistoryItems: 100
+  maxHistoryItems: 100,
+  rememberModalSize: true, // true to remember last resized dimensions, false to reset every time
+  modalDimensions: {
+    inPageWidth: 450,
+    inPageHeight: 560,
+    popupWidth: 440,
+    popupHeight: 580
+  }
 };
 
 // Check if browser.storage is available (Firefox / Chrome WebExtension)
@@ -190,6 +197,38 @@ function exportFavoritesToAnki(favorites) {
   return `#separator:tab\n#html:false\n#tags column:5\n#Front\tReading\tMeaning\tJLPT\tTags\n` + rows.join('\n');
 }
 
+/**
+ * Update and persist modal/popup dimensions if rememberModalSize is enabled
+ */
+async function updateModalDimensions(dims) {
+  if (!storageAPI || !dims) return;
+  try {
+    const settings = await getSettings();
+    if (settings.rememberModalSize === false) return; // Do not persist if disabled
+    settings.modalDimensions = {
+      ...(settings.modalDimensions || DEFAULT_SETTINGS.modalDimensions),
+      ...dims
+    };
+    await saveSettings(settings);
+  } catch (err) {
+    console.error('Failed to update modal dimensions:', err);
+  }
+}
+
+/**
+ * Reset modal and popup dimensions to defaults
+ */
+async function resetModalDimensions() {
+  if (!storageAPI) return;
+  try {
+    const settings = await getSettings();
+    settings.modalDimensions = { ...DEFAULT_SETTINGS.modalDimensions };
+    await saveSettings(settings);
+  } catch (err) {
+    console.error('Failed to reset modal dimensions:', err);
+  }
+}
+
 // Export for module/script usage
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
@@ -202,6 +241,8 @@ if (typeof module !== 'undefined' && module.exports) {
     getFavorites,
     toggleFavorite,
     isFavorite,
-    exportFavoritesToAnki
+    exportFavoritesToAnki,
+    updateModalDimensions,
+    resetModalDimensions
   };
 }

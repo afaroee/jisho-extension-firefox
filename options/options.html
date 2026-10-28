@@ -51,6 +51,25 @@
             <option value="top-right">Top Right Corner</option>
           </select>
         </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <label for="setting-remember-size">Window Sizing Memory</label>
+            <span class="setting-desc">Choose whether to remember your custom resized window dimensions or always reset to default size when reopened.</span>
+          </div>
+          <select id="setting-remember-size" class="select-input">
+            <option value="true">Remember last resized size</option>
+            <option value="false">Always reset to default size</option>
+          </select>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <label>Reset Window Dimensions</label>
+            <span class="setting-desc">Restore in-page modal (450×560) and toolbar popup (440×580) to default sizes.</span>
+          </div>
+          <button type="button" id="btn-reset-dimensions" class="btn-secondary">Reset to Defaults</button>
+        </div>
       </section>
 
       <!-- 2. Kanji Stroke Order Section -->

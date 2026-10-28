@@ -255,6 +255,7 @@ class KanjiVGManager {
     const toggleNumbersBtn = container.querySelector('.jkl-btn-toggle-numbers');
     const numbersGroup = container.querySelector('.jkl-stroke-numbers');
     const stepCards = Array.from(container.querySelectorAll('.jkl-step-card'));
+    const scroller = container.querySelector('.jkl-step-grid-scroller');
 
     let currentStrokeIndex = -1; // -1 means none shown, 0..N-1
     let isPlaying = false;
@@ -277,7 +278,15 @@ class KanjiVGManager {
       stepCards.forEach((card, i) => {
         if (i === index) {
           card.classList.add('jkl-step-active');
-          card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+          if (scroller) {
+            const scrollerRect = scroller.getBoundingClientRect();
+            const cardRect = card.getBoundingClientRect();
+            const relativeLeft = cardRect.left - scrollerRect.left + scroller.scrollLeft;
+            scroller.scrollTo({
+              left: relativeLeft - (scroller.clientWidth / 2) + (card.offsetWidth / 2),
+              behavior: 'smooth'
+            });
+          }
         } else {
           card.classList.remove('jkl-step-active');
         }

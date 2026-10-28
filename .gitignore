@@ -7,3 +7,6 @@ Thumbs.db
 *.log
 .vscode/
 .idea/
+.kilo/
+AGENTS.md
+LOCALMODELRULES.md

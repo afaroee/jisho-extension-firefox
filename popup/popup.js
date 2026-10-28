@@ -25,7 +25,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   let currentData = null;
   let popupAudioSpeed = 1.0;
 
-  // 1. Initialize favorites count & recent history
+  // 1. Initialize dimensions, favorites count & recent history
+  initPopupSize();
+  setupPopupResize();
   updateFavoritesCount();
   renderHistoryView();
   renderFavoritesView();
@@ -391,5 +393,91 @@ document.addEventListener('DOMContentLoaded', async () => {
   function switchTab(tabName) {
     navTabs.forEach(t => t.classList.toggle('active', t.dataset.tab === tabName));
     tabPanes.forEach(p => p.classList.toggle('active', p.id === `pane-${tabName}`));
+  }
+
+  // Initialize and apply popup window dimensions
+  async function initPopupSize() {
+    if (typeof getSettings !== 'function') return;
+    try {
+      const settings = await getSettings();
+      if (settings.rememberModalSize !== false && settings.modalDimensions) {
+        const w = Math.max(380, Math.min(settings.modalDimensions.popupWidth || 440, 800));
+        const h = Math.max(460, Math.min(settings.modalDimensions.popupHeight || 580, 600));
+        applyPopupDimensions(w, h);
+      }
+    } catch (err) {
+      // Fallback to CSS defaults
+    }
+  }
+
+  function applyPopupDimensions(width, height) {
+    document.documentElement.style.width = `${width}px`;
+    document.documentElement.style.height = `${height}px`;
+    document.body.style.width = `${width}px`;
+    document.body.style.height = `${height}px`;
+  }
+
+  // Setup corner resize handle for popup
+  function setupPopupResize() {
+    const handle = document.getElementById('popup-resize-handle');
+    if (!handle) return;
+
+    handle.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      let isResizing = true;
+      const startX = e.screenX || e.clientX;
+      const startY = e.screenY || e.clientY;
+      const startW = document.body.offsetWidth;
+      const startH = document.body.offsetHeight;
+
+      handle.classList.add('active');
+      document.body.style.userSelect = 'none';
+
+      const onMouseMove = (moveEvent) => {
+        if (!isResizing) return;
+        const currentX = moveEvent.screenX || moveEvent.clientX;
+        const currentY = moveEvent.screenY || moveEvent.clientY;
+        const deltaX = currentX - startX;
+        const deltaY = currentY - startY;
+
+        const newW = Math.max(380, Math.min(startW + deltaX, 800));
+        const newH = Math.max(460, Math.min(startH + deltaY, 600));
+
+        applyPopupDimensions(newW, newH);
+      };
+
+      const onMouseUp = async () => {
+        if (!isResizing) return;
+        isResizing = false;
+        handle.classList.remove('active');
+        document.body.style.userSelect = '';
+        window.removeEventListener('mousemove', onMouseMove);
+        window.removeEventListener('mouseup', onMouseUp);
+
+        if (typeof updateModalDimensions === 'function') {
+          await updateModalDimensions({
+            popupWidth: document.body.offsetWidth,
+            popupHeight: document.body.offsetHeight
+          });
+        }
+      };
+
+      window.addEventListener('mousemove', onMouseMove);
+      window.addEventListener('mouseup', onMouseUp);
+    });
+
+    handle.addEventListener('dblclick', async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      applyPopupDimensions(440, 580);
+      if (typeof updateModalDimensions === 'function') {
+        await updateModalDimensions({
+          popupWidth: 440,
+          popupHeight: 580
+        });
+      }
+    });
   }
 });
